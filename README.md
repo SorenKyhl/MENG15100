@@ -6,7 +6,7 @@ Colab course materials for the UChicago course MENG15100: Machine Learning and A
 
 ### Module 2 - Google Colab w/ Python
 
-1. [1_python_basics.ipynb](https://colab.research.google.com/github/andrewlferguson/MENG15100/blob/master/notebooks/M2/1_python_basics.ipynb)
+1. [python_basics.ipynb](https://colab.research.google.com/github/andrewlferguson/MENG15100/blob/master/notebooks/M2/python_basics.ipynb)
 
 ## Acknowledgements
 
