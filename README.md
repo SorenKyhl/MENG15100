@@ -8,13 +8,17 @@ Colab course materials for the UChicago course MENG15100: Machine Learning and A
 
 * [python_basics.ipynb](https://colab.research.google.com/github/andrewlferguson/MENG15100/blob/master/notebooks/M2/python_basics.ipynb)
 
-### Module 3 - Linear Regression
+### Module 3 - Linear Regression, Regularization, and Cross Validation
 
 * [linreg.ipynb](https://colab.research.google.com/github/andrewlferguson/MENG15100/blob/master/notebooks/M3/linreg.ipynb)
 
+### Module 4 - Dimensionality Reduction and Clustering
+
+* [dimred_cluster.ipynb](https://colab.research.google.com/github/andrewlferguson/MENG15100/blob/master/notebooks/M4/dimred_cluster.ipynb)
+
 ## Acknowledgements
 
-Notebooks and code were borrowed and adapted under the MIT License from the [Data@PSL](https://github.com/data-psl) tutorials originally written by Pierre Ablin, Mathieu Blondel and Arthur Mensch.
+Components of these notebooks and code were borrowed and adapted from the [Data@PSL](https://github.com/data-psl) tutorials originally written by Pierre Ablin, Mathieu Blondel and Arthur Mensch under the [MIT License](https://github.com/data-psl/lectures2025/blob/main/LICENSE). Some materials therein were adapted from [sklearn tutorials](https://github.com/jakevdp/sklearn_tutorial/tree/master) developed by Jake Vanderplas under the [BSD-3 License](https://github.com/jakevdp/sklearn_tutorial/blob/master/LICENSE).
 
 ## License
 
