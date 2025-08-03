@@ -6,16 +6,24 @@ Colab course materials for the UChicago course MENG15100: Machine Learning and A
 
 ### Module 2 - Google Colab w/ Python
 
-* [python_basics.ipynb](https://github.com/andrewlferguson/MENG15100/blob/master/notebooks/M2/python_basics.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/andrewlferguson/MENG15100/blob/master/notebooks/M2/python_basics.ipynb)
+* [python_basics.ipynb](https://github.com/andrewlferguson/MENG15100/blob/main/notebooks/M2/python_basics.ipynb) <a href="https://colab.research.google.com/github/andrewlferguson/MENG15100/blob/main/notebooks/M2/python_basics.ipynb" target="_blank">
+  <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"/>
+</a>
+<!-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/andrewlferguson/MENG15100/blob/main/notebooks/M2/python_basics.ipynb) -->
+
 
 
 ### Module 3 - Linear Regression, Regularization, and Cross Validation
 
-* [linreg.ipynb](https://colab.research.google.com/github/andrewlferguson/MENG15100/blob/master/notebooks/M3/linreg.ipynb)
+* [linreg.ipynb](https://colab.research.google.com/github/andrewlferguson/MENG15100/blob/main/notebooks/M3/linreg.ipynb) <a href="https://colab.research.google.com/github/andrewlferguson/MENG15100/blob/main/notebooks/M3/linreg.ipynb" target="_blank">
+  <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"/>
+</a>
 
 ### Module 4 - Dimensionality Reduction and Clustering
 
-* [dimred_cluster.ipynb](https://colab.research.google.com/github/andrewlferguson/MENG15100/blob/master/notebooks/M4/dimred_cluster.ipynb)
+* [dimred_cluster.ipynb](https://colab.research.google.com/github/andrewlferguson/MENG15100/blob/main/notebooks/M4/dimred_cluster.ipynb) <a href="https://colab.research.google.com/github/andrewlferguson/MENG15100/blob/main/notebooks/M4/dimred_cluster.ipynb" target="_blank">
+  <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"/>
+</a>
 
 ## Acknowledgements
 
