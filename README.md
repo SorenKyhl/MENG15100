@@ -15,13 +15,13 @@ Colab course materials for the UChicago course MENG15100: Machine Learning and A
 
 ### Module 3 - Linear Regression, Regularization, and Cross Validation
 
-* [linreg.ipynb](https://colab.research.google.com/github/andrewlferguson/MENG15100/blob/main/notebooks/M3/linreg.ipynb) <a href="https://colab.research.google.com/github/andrewlferguson/MENG15100/blob/main/notebooks/M3/linreg.ipynb" target="_blank">
+* [linreg.ipynb](https://github.com/andrewlferguson/MENG15100/blob/main/notebooks/M3/linreg.ipynb) <a href="https://colab.research.google.com/github/andrewlferguson/MENG15100/blob/main/notebooks/M3/linreg.ipynb" target="_blank">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"/>
 </a>
 
 ### Module 4 - Dimensionality Reduction and Clustering
 
-* [dimred_cluster.ipynb](https://colab.research.google.com/github/andrewlferguson/MENG15100/blob/main/notebooks/M4/dimred_cluster.ipynb) <a href="https://colab.research.google.com/github/andrewlferguson/MENG15100/blob/main/notebooks/M4/dimred_cluster.ipynb" target="_blank">
+* [dimred_cluster.ipynb](https://github.com/andrewlferguson/MENG15100/blob/main/notebooks/M4/dimred_cluster.ipynb) <a href="https://colab.research.google.com/github/andrewlferguson/MENG15100/blob/main/notebooks/M4/dimred_cluster.ipynb" target="_blank">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"/>
 </a>
 
