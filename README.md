@@ -25,6 +25,8 @@ Colab course materials for the UChicago course MENG15100: Machine Learning and A
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"/>
 </a>
 
+### Module 5 - Artificial Neural Networks
+
 ## Acknowledgements
 
 Components of these notebooks and code were borrowed and adapted from the [Data@PSL](https://github.com/data-psl) tutorials originally written by Pierre Ablin, Mathieu Blondel and Arthur Mensch under the [MIT License](https://github.com/data-psl/lectures2025/blob/main/LICENSE). Some materials therein were adapted from [sklearn tutorials](https://github.com/jakevdp/sklearn_tutorial/tree/master) developed by Jake Vanderplas under the [BSD-3 License](https://github.com/jakevdp/sklearn_tutorial/blob/master/LICENSE).
