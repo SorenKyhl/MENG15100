@@ -31,10 +31,9 @@ Computational lab modules to put into practice the machine learning concepts and
 
 ### Lab 1 - Google Colab w/ Python
 
-* [lab1.ipynb](https://github.com/andrewlferguson/MENG15100/blob/lab1/notebooks/M2/Lab1.ipynb) <a href="https://colab.research.google.com/github/andrewlferguson/MENG15100/blob/lab1/notebooks/M2/Lab1.ipynb" target="_blank">
+* [lab1.ipynb](https://github.com/andrewlferguson/MENG15100/blob/main/labs/L1/Lab1.ipynb) <a href="https://colab.research.google.com/github/andrewlferguson/MENG15100/blob/main/labs/L1/Lab1.ipynb" target="_blank">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"/>
 </a>
-<!-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/SorenKyhl/MENG15100/blob/lab1/notebooks/M2/Lab1.ipynb) -->
 
 ## Acknowledgements
 
