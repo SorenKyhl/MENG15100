@@ -11,13 +11,6 @@ Colab course materials for the UChicago course MENG15100: Machine Learning and A
 </a>
 <!-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/andrewlferguson/MENG15100/blob/main/notebooks/M2/python_basics.ipynb) -->
 
-* [lab1.ipynb](https://github.com/SorenKyhl/MENG15100/blob/lab1/notebooks/M2/Lab1.ipynb) <a href="https://colab.research.google.com/github/SorenKyhl/MENG15100/blob/lab1/notebooks/M2/Lab1.ipynb" target="_blank">
-  <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"/>
-</a>
-<!-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/SorenKyhl/MENG15100/blob/lab1/notebooks/M2/Lab1.ipynb) -->
-
-*TODO* change links from SorenKyhl fork to andrewlferguson fork.
-
 ### Module 3 - Linear Regression, Regularization, and Cross Validation
 
 * [linreg.ipynb](https://github.com/andrewlferguson/MENG15100/blob/main/notebooks/M3/linreg.ipynb) <a href="https://colab.research.google.com/github/andrewlferguson/MENG15100/blob/main/notebooks/M3/linreg.ipynb" target="_blank">
@@ -31,6 +24,17 @@ Colab course materials for the UChicago course MENG15100: Machine Learning and A
 </a>
 
 ### Module 5 - Artificial Neural Networks
+
+## Labs
+
+Computational lab modules to put into practice the machine learning concepts and tools covered in the course lectures.
+
+### Lab 1 - Google Colab w/ Python
+
+* [lab1.ipynb](https://github.com/andrewlferguson/MENG15100/blob/lab1/notebooks/M2/Lab1.ipynb) <a href="https://colab.research.google.com/github/andrewlferguson/MENG15100/blob/lab1/notebooks/M2/Lab1.ipynb" target="_blank">
+  <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"/>
+</a>
+<!-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/SorenKyhl/MENG15100/blob/lab1/notebooks/M2/Lab1.ipynb) -->
 
 ## Acknowledgements
 
