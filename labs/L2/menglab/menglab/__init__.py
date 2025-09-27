@@ -1,3 +1,19 @@
+from .load import (
+    load_dataset,
+    load_full_dataset,
+    load_alkanes,
+    load_expanded_alkanes,
+    load_multilinear_alkanes,
+)
+
+__all__ = [
+    "load_dataset",
+    "load_full_dataset",
+    "load_alkanes",
+    "load_expanded_alkanes",
+    "load_multilinear_alkanes",
+]
+
 try:
     from rdkit import Chem  # and other rdkit imports as needed
 except Exception as e:
