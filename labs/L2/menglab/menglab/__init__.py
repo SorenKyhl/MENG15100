@@ -16,11 +16,9 @@ __all__ = [
     "load_multilinear_alkanes",
 ]
 
+# Optional: add version metadata
 try:
-    from rdkit import Chem  # and other rdkit imports as needed
-except Exception as e:
-    raise ImportError(
-        "menglab requires RDKit. Install it via conda-forge, e.g.:\n"
-        "  conda install -c conda-forge rdkit\n"
-        "or create a new env with rdkit preinstalled."
-    ) from e
+    from importlib.metadata import version as _pkg_version
+    __version__ = _pkg_version("menglab")
+except Exception:
+    __version__ = "0.0.0"
