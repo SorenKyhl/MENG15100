@@ -25,6 +25,10 @@ Colab course materials for the UChicago course MENG15100: Machine Learning and A
 
 ### Module 5 - Artificial Neural Networks
 
+* [neural_networks.ipynb](https://github.com/andrewlferguson/MENG15100/blob/main/notebooks/M5/neural_networks.ipynb) <a href="https://colab.research.google.com/github/andrewlferguson/MENG15100/blob/main/notebooks/M5/neural_networks.ipynb" target="_blank">
+  <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"/>
+</a>
+
 ## Labs
 
 Computational lab modules to put into practice the machine learning concepts and tools covered in the course lectures.
