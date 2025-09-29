@@ -12,7 +12,10 @@ from .gui import (
     data_explorer,
     interactive_loss_landscape,
     manually_train_linear_regression,
-    interactive_gradient_descent
+    interactive_gradient_descent,
+    plot_performance,
+    interactive_polynomial_regression,
+    plot_model_losses
 )
 
 __all__ = [
@@ -27,6 +30,9 @@ __all__ = [
     "interactive_loss_landscape",
     "manually_train_linear_regression",
     "interactive_gradient_descent",
+    "plot_performance",
+    "interactive_polynomial_regression",
+    "plot_model_losses"
 ]
 
 # Optional: add version metadata
