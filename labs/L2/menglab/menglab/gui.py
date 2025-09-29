@@ -177,9 +177,128 @@ def data_explorer(data):
     update_left_panel(w_name.value)
     display(VBox([w_name, HBox([left_out, figw])]))
 
+
+# ---------- Helper Function: Plot interactive 3D molecular Viewer ----------
+from rdkit import Chem
+from rdkit.Chem import AllChem
+import py3Dmol
+
+def molecule_3d_html_from_smiles(
+      smiles: str,
+      style: str = "ballstick",
+      surface: bool = True,
+      width: int = 520,
+      height: int = 400,
+      optimize: bool = True,
+      add_h: bool = True,
+      conf_id: int = -1,
+      bg: str = "0xFFFFFF"
+    ) -> str:
+    """
+    helper for `data_explorer` function
+    Convert a SMILES string into an interactive 3D molecular viewer (HTML).
+
+    This function uses **RDKit** to generate a 3D structure from a SMILES string,
+    optionally optimizes the geometry, and then renders it with **py3Dmol**.
+    The result is an HTML snippet that can be displayed inline in Jupyter
+    notebooks to explore molecules in 3D.
+
+    Parameters
+    ----------
+    smiles : str
+        A SMILES string representing the molecule (text encoding of atoms
+        and bonds).
+    style : str, default="ballstick"
+        Rendering style for atoms and bonds. Options include:
+        - "stick": sticks for bonds only
+        - "line": thin lines for bonds
+        - "ballstick": sticks plus small spheres for atoms
+        - "sphere": atoms as full spheres
+        - "cartoon": ribbon/cartoon style (mainly for proteins)
+    surface : bool, default=True
+        If True, draws a semi-transparent van der Waals (VDW) surface
+        around the molecule.
+    width : int, default=520
+        Width of the viewer in pixels.
+    height : int, default=400
+        Height of the viewer in pixels.
+    optimize : bool, default=True
+        If True, run a quick force-field optimization (UFF) after embedding
+        the molecule to improve geometry.
+    add_h : bool, default=True
+        If True, add implicit hydrogens before generating 3D coordinates.
+    conf_id : int, default=-1
+        Conformer ID to render (useful if multiple conformers are present).
+        -1 means "use the default conformer".
+    bg : str, default="0xFFFFFF"
+        Background color in hex (e.g. "0xFFFFFF" = white, "0x000000" = black).
+
+    Returns
+    -------
+    str
+        An HTML string containing the interactive 3D viewer.
+        Can be displayed inline in Jupyter with `IPython.display.HTML`.
+
+    Raises
+    ------
+    None directly, but returns HTML error messages in two cases:
+    - Invalid SMILES string
+    - Failure to embed a 3D structure
+
+    Notes
+    -----
+    - Uses RDKit’s ETKDGv3 algorithm for 3D embedding.
+    - The random seed is fixed for reproducibility.
+    - If optimization fails, the function falls back to the embedded geometry.
+    - Intended for use inside Jupyter/IPython environments.
+
+    Example
+    -------
+    >>> from IPython.display import HTML
+    >>> html = molecule_3d_html_from_smiles("CCO", style="ballstick")
+    >>> display(HTML(html))  # Shows ethanol in 3D
+    """
+
+    mol = Chem.MolFromSmiles(smiles)
+    if mol is None:
+        return "<b>Invalid SMILES.</b>"
+    if add_h:
+        mol = Chem.AddHs(mol)
+
+    params = AllChem.ETKDGv3()
+    params.randomSeed = 0xF00D
+    if AllChem.EmbedMolecule(mol, params) != 0:
+        return "<b>3D embedding failed for this SMILES.</b>"
+
+    if optimize:
+        try:
+            AllChem.UFFOptimizeMolecule(mol, maxIters=200)
+        except Exception:
+            pass
+
+    mb = Chem.MolToMolBlock(mol, confId=conf_id)
+
+    view = py3Dmol.view(width=width, height=height)
+    view.setBackgroundColor(bg)
+    view.addModel(mb, 'sdf')
+
+    style_map = {
+        "stick": {"stick": {}},
+        "line": {"line": {}},
+        "ballstick": {"stick": {}, "sphere": {"scale": 0.25}},
+        "sphere": {"sphere": {}},
+        "cartoon": {"cartoon": {}}
+    }
+    view.setStyle(style_map.get(style, {"stick": {}}))
+    if surface:
+        view.addSurface(py3Dmol.VDW, {"opacity": 0.4, "color": "white"})
+    view.zoomTo()
+    return view._make_html()
+
 import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+
 
 def interactive_loss_landscape():
     """
