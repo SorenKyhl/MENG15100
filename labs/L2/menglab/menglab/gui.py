@@ -723,5 +723,316 @@ def interactive_gradient_descent(X_train, y_train):
 
     top_row = HBox([out_plot, out_model])
     display(VBox([controls_row1, controls_row2, controls_row3, status, top_row, out_loss]))
+    
+import matplotlib.pyplot as plt
+import numpy as np
+
+def plot_performance(w, b):
+    """Plot regression and parity plots side by side."""
+
+    # Predictions
+    y_pred_train = model(X_train, w, b)
+    y_pred_test = model(X_test, w, b)
+
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+    # --- Regression Plot ---
+    ax = axes[0]
+    ax.scatter(X_train, y_train, label="Train data", color="blue", alpha=0.7)
+    ax.scatter(X_test, y_test, label="Test data", color="green", alpha=0.7, marker="x")
+    xs = np.linspace(min(X_train.min(), X_test.min()),
+                     max(X_train.max(), X_test.max()), 200)
+    ax.plot(xs, model(xs, w, b), color="red", label="Model prediction")
+    ax.set_xlabel("Molecular Weight")
+    ax.set_ylabel("Boiling Point (K)")
+    ax.set_title("Regression Plot")
+    ax.legend()
+    ax.grid(alpha=0.3)
+
+    # --- Parity Plot ---
+    ax = axes[1]
+    ax.scatter(y_train, y_pred_train, label="Train data", color="blue", alpha=0.7)
+    ax.scatter(y_test, y_pred_test, label="Test data", color="green", alpha=0.7, marker="x")
+    all_y = np.concatenate([y_train, y_test])
+    ax.plot([all_y.min(), all_y.max()],
+            [all_y.min(), all_y.max()],
+            'k--', label="Perfect prediction")
+    ax.set_xlabel("True Boiling Point (K)")
+    ax.set_ylabel("Predicted Boiling Point (K)")
+    ax.set_title("Parity Plot")
+    ax.legend()
+    ax.grid(alpha=0.3)
+
+    plt.tight_layout()
+    plt.show()
+
+def interactive_polynomial_regression():
+    """
+    GUI: sklearn linear models with selectable x^k and log(x) features.
+    - Internally STANDARDIZES features for fitting (always on)
+    - Displays parameters mapped back to ORIGINAL feature space
+    - Models: LinearRegression or Ridge (alpha)
+    - Features: x, x^2, x^3, x^4, log(x) (log(x) ignored if any x <= 0)
+    - Plots: fit curve vs data (left) + parity plot (right)
+    - RETURNS a handle object with:
+        .model, .scaler, .feature_names, .eqn,
+        .predict(x_new), .transform(x_vec)
+    """
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from ipywidgets import Checkbox, FloatText, Dropdown, Button, HBox, VBox, Output, HTML, Layout
+    from IPython.display import display, clear_output
+    from sklearn.linear_model import LinearRegression, Ridge
+    from sklearn.preprocessing import StandardScaler
+    from sklearn.metrics import mean_squared_error, r2_score
+
+    # -------- Data (expects 1D X) --------
+    x_raw = np.asarray(X_train, dtype=float).ravel()
+    y_raw = np.asarray(y_train, dtype=float).ravel()
+    x_test_raw = np.asarray(X_test, dtype=float).ravel()   # <-- added
+    y_test_raw = np.asarray(y_test, dtype=float).ravel()   # <-- added
+
+    # -------- Widgets --------
+    w_x   = Checkbox(value=True,  description="x")
+    w_x2  = Checkbox(value=False, description="x²")
+    w_x3  = Checkbox(value=False, description="x³")
+    w_x4  = Checkbox(value=False, description="x⁴")
+    w_log = Checkbox(value=False, description="log(x)")
+
+    w_model = Dropdown(options=["LinearRegression", "Ridge"], value="LinearRegression", description="Model")
+    w_alpha = FloatText(value=1.0, description="alpha (Ridge)", step=0.1, disabled=True)
+
+    btn_fit   = Button(description="Fit model", button_style="success")
+    btn_reset = Button(description="Reset", button_style="warning")
+
+    status   = HTML()
+    out_fit  = Output()
+    out_par  = Output()
+    out_text = Output()
+
+    # ------- handle object to return -------
+    class _Handle:
+        model = None
+        scaler = None
+        feature_names = None
+        eqn = None
+        def transform(self, x_vec):
+            Xd, _, _ = _build_features(np.asarray(x_vec, dtype=float).ravel(), w_log.value)
+            return Xd
+        def predict(self, x_new):
+            x_new = np.asarray(x_new, dtype=float).ravel()
+            Xd, _, warn = _build_features(x_new, w_log.value)
+            if warn and w_log.value:
+                pass  # log(x) ignored for non-positive values; still proceed
+            Xs = self.scaler.transform(Xd)
+            return self.model.predict(Xs)
+
+    handle = _Handle()
+
+    # ------- feature builder -------
+    def _build_features(x, use_log):
+        """
+        Build design matrix from selected widgets.
+        Returns X_design, feature_names, warning_html ('')
+        """
+        feats, names = [], []
+        warn = ""
+        if w_x.value:
+            feats.append(x); names.append("x")
+        if w_x2.value:
+            feats.append(x**2); names.append("x^2")
+        if w_x3.value:
+            feats.append(x**3); names.append("x^3")
+        if w_x4.value:
+            feats.append(x**4); names.append("x^4")
+        if use_log:
+            if np.any(x <= 0):
+                warn = "<i>log(x) ignored because some x ≤ 0.</i>"
+            else:
+                feats.append(np.log(x)); names.append("log(x)")
+        if len(feats) == 0:
+            feats = [x]; names = ["x"]
+        X_design = np.column_stack(feats)
+        return X_design, names, warn
+
+    # ------- main fit/plot routine -------
+    def _fit_and_plot(*_):
+        # Build TRAIN features
+        X_design, names, warn = _build_features(x_raw, w_log.value)
+
+        # Always standardize for fitting
+        scaler = StandardScaler(with_mean=True, with_std=True)
+        X_fit = scaler.fit_transform(X_design)
+
+        # Model selection
+        if w_model.value == "LinearRegression":
+            model = LinearRegression(fit_intercept=True)
+        else:
+            model = Ridge(alpha=float(w_alpha.value), fit_intercept=True, random_state=0)
+
+        # Fit & predict (train)
+        model.fit(X_fit, y_raw)
+        y_pred = model.predict(X_fit)
+
+        # --- TEST predictions & metrics (added) ---
+        X_test_design, _, warn_test = _build_features(x_test_raw, w_log.value)
+        X_test_fit = scaler.transform(X_test_design)
+        y_pred_test = model.predict(X_test_fit)
+        rmse_test = float(np.sqrt(mean_squared_error(y_test_raw, y_pred_test)))
+        # ------------------------------------------
+
+        # Metrics (train)
+        rmse = float(np.sqrt(mean_squared_error(y_raw, y_pred)))
+        r2   = float(r2_score(y_raw, y_pred))
+
+        # Smooth curve spanning train+test x-range
+        x_min = float(np.min(np.hstack((x_raw, x_test_raw))))
+        x_max = float(np.max(np.hstack((x_raw, x_test_raw))))
+        x_line = np.linspace(x_min, x_max, 400)
+        X_line_design, _, warn_line = _build_features(x_line, w_log.value)
+        X_line_fit = scaler.transform(X_line_design)
+        y_line_pred = model.predict(X_line_fit)
+
+        # Map params back to ORIGINAL feature space
+        coef_std = np.asarray(model.coef_).ravel()
+        intercept_std = float(model.intercept_)
+        mu = scaler.mean_.ravel()
+        sigma = scaler.scale_.ravel()
+        sigma_safe = np.where(sigma == 0, 1.0, sigma)
+        coef_orig = coef_std / sigma_safe
+        intercept_orig = intercept_std - np.sum(coef_std * (mu / sigma_safe))
+
+        # Human-readable eqn (original space)
+        terms = [f"{coef_orig[i]:+.4g}·{names[i]}" for i in range(len(names))]
+        eqn = f"y = {intercept_orig:+.4g} " + " ".join(terms) if terms else f"y = {intercept_orig:+.4g}"
+
+        # Update handle
+        handle.model = model
+        handle.scaler = scaler
+        handle.feature_names = names
+        handle.eqn = eqn
+
+        # Status
+        extra_warn = warn or warn_line or warn_test
+        status.value = (
+            f"<b>Model:</b> {w_model.value} &nbsp;&nbsp; "
+            f"<b>Features:</b> {', '.join(names)}<br>"
+            f"<b>RMSE (train):</b> {rmse:.5g} &nbsp;&nbsp; "
+            f"<b>RMSE (test):</b> {rmse_test:.5g}"
+            f"{' • ' + extra_warn if extra_warn else ''}"
+        )
+
+        # Left plot: fit curve vs data
+        with out_fit:
+            clear_output(wait=True)
+            fig = plt.figure(figsize=(7.0, 5.0))
+            ax = fig.add_subplot(111)
+            ax.scatter(x_raw, y_raw, alpha=0.85, label="training data")
+            ax.scatter(x_test_raw, y_test_raw, alpha=0.85, label="testing data")
+            ax.plot(x_line, y_line_pred, linewidth=2.0, label="model prediction")
+            ax.set_xlabel("x"); ax.set_ylabel("y")
+            ax.set_title("Model fit with selected features")
+            ax.legend(loc="best")
+            plt.show()
+
+        # Parity plot (fixed lo/hi computation)
+        with out_par:
+            clear_output(wait=True)
+            fig = plt.figure(figsize=(7.0, 5.0))
+            ax = fig.add_subplot(111)
+
+            ax.scatter(y_raw,      y_pred,      alpha=0.85, label="train")
+            ax.scatter(y_test_raw, y_pred_test, alpha=0.85, label="test")
+
+            lo = float(np.min([y_raw.min(), y_pred.min(), y_test_raw.min(), y_pred_test.min()]))
+            hi = float(np.max([y_raw.max(), y_pred.max(), y_test_raw.max(), y_pred_test.max()]))
+
+            ax.plot([lo, hi], [lo, hi], linewidth=1.5, linestyle="--", label="y = x")
+            ax.set_xlabel("Actual y"); ax.set_ylabel("Predicted ŷ")
+            ax.set_title("Parity plot (ŷ vs y)")
+            ax.legend(loc="best")
+            ax.grid(True, alpha=0.3)
+            plt.show()
+
+
+        # Equation / coefficients box
+        with out_text:
+            clear_output(wait=True)
+            print("Learned equation (ORIGINAL feature space):")
+            print("  ", eqn)
+            print()
+            print("Coefficients (original features):")
+            for name, c in zip(names, coef_orig):
+                print(f"  {name:>10s}: {c: .6g}")
+            print(f"  {'intercept':>10s}: {intercept_orig: .6g}")
+
+    def _reset(*_):
+        w_x.value, w_x2.value, w_x3.value, w_x4.value, w_log.value = True, False, False, False, False
+        w_model.value = "LinearRegression"
+        w_alpha.value = 1.0
+        _on_model_change({"new": w_model.value})
+        _fit_and_plot()
+
+    def _on_model_change(change):
+        if change.get("new", w_model.value) == "Ridge":
+            w_alpha.disabled = False
+        else:
+            w_alpha.disabled = True
+
+    # Wire up + layout
+    btn_fit.on_click(_fit_and_plot)
+    btn_reset.on_click(_reset)
+    w_model.observe(_on_model_change, names="value")
+
+    controls_row1 = HBox([w_x, w_x2, w_x3, w_x4, w_log], layout=Layout(gap="12px"))
+    controls_row2 = HBox([w_model, w_alpha, btn_fit, btn_reset], layout=Layout(gap="12px"))
+
+    two_plots = HBox([out_fit, out_par], layout=Layout(gap="24px"))
+    display(VBox([controls_row1, controls_row2, status, two_plots, out_text]))
+
+    # initial fit (so handle is populated immediately)
+    _fit_and_plot()
+
+    return handle
+    
+import matplotlib.pyplot as plt
+import numpy as np
+
+def plot_model_losses(model_names, train_losses, test_losses):
+    """
+    Plot training and testing RMSE for multiple models as a grouped bar chart.
+
+    Args:
+        model_names (list of str): names of models (e.g., ["Model A", "Model B"])
+        train_losses (list of float): training RMSE for each model
+        test_losses (list of float): testing RMSE for each model
+    """
+    x = np.arange(len(model_names))  # positions
+    width = 0.35                     # bar width
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+
+    bars_train = ax.bar(x - width/2, train_losses, width,
+                        label="Train", color="steelblue", alpha=0.85)
+    bars_test = ax.bar(x + width/2, test_losses, width,
+                       label="Test", color="seagreen", alpha=0.85)
+
+    # Add labels inside bars
+    for bars in [bars_train, bars_test]:
+        for bar in bars:
+            height = bar.get_height()
+            ax.text(bar.get_x() + bar.get_width()/2., height/2,
+                    f"{height:.2f}", ha='center', va='center',
+                    fontsize=10, color="white", fontweight="bold")
+
+    ax.set_ylabel("RMSE Loss")
+    ax.set_title("Model Performance: Training vs Testing Loss")
+    ax.set_xticks(x)
+    ax.set_xticklabels(model_names)
+    ax.legend()
+    ax.grid(axis="y", alpha=0.3)
+
+    plt.tight_layout()
+    plt.show()
 
 
