@@ -335,7 +335,7 @@ def interactive_loss_landscape(X_train, y_train):
 
     Example
     -------
-    >>> interactive_loss_landscape()
+    >>> interactive_loss_landscape(X_train, y_train)
     # Opens an interactive 3D + heatmap visualization of the loss surface
     """
     def loss_function(y, y_prediction):
@@ -344,7 +344,7 @@ def interactive_loss_landscape(X_train, y_train):
         squared_error = np.square(error)
         mean_squared_error = np.mean(squared_error)
         root_mean_squared_error = np.sqrt(mean_squared_error)
-    return root_mean_squared_error
+        return root_mean_squared_error
     
     # --- 1. Compute grid for (w, b) ---
     w_ls, b_ls = np.polyfit(np.asarray(X_train).ravel(), np.asarray(y_train).ravel(), 1)
