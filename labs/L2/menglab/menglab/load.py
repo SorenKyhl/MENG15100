@@ -6,6 +6,7 @@ import tarfile
 import tempfile
 from typing import List, Optional
 
+import numpy as np
 import pandas as pd
 import requests
 from rdkit import Chem
