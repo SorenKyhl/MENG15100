@@ -300,7 +300,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 
-def interactive_loss_landscape(X_train, y_train):
+def interactive_loss_landscape(X_train, y_train, loss_function):
     """
     Visualize the loss landscape of linear regression as an interactive plot.
 
@@ -392,7 +392,7 @@ import matplotlib.pyplot as plt
 from ipywidgets import FloatSlider, HBox, VBox, HTML, interactive_output
 from sklearn.linear_model import LinearRegression
 
-def manually_train_linear_regression():
+def manually_train_linear_regression(X_train, y_train, loss_function):
   # Set up sliders for w and b
   w_slider = FloatSlider(description="w (slope)", value=1.0, min=-5.0, max=5.0, step=0.05, readout_format=".2f")
   b_slider = FloatSlider(description="b (intercept)", value=1.0, min=-100.0, max=200.0, step=0.5, readout_format=".1f")
@@ -432,7 +432,7 @@ def manually_train_linear_regression():
   ui = VBox([HBox([w_slider, b_slider]), status_label])
   display(ui, out)
 
-def interactive_gradient_descent():
+def interactive_gradient_descent(X_train, y_train):
     """
     Gradient Descent GUI (RMSE heatmap + model plot + RMSE vs iter)
     - Trains in standardized-x space (stable), displays in original space
