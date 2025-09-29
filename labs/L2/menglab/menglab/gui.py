@@ -300,7 +300,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 
-def interactive_loss_landscape():
+def interactive_loss_landscape(X_train, y_train):
     """
     Visualize the loss landscape of linear regression as an interactive plot.
 
