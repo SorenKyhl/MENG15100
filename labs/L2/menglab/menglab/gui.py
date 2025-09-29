@@ -300,7 +300,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 
-def interactive_loss_landscape(X_train, y_train, loss_function):
+def interactive_loss_landscape(X_train, y_train):
     """
     Visualize the loss landscape of linear regression as an interactive plot.
 
@@ -331,8 +331,6 @@ def interactive_loss_landscape(X_train, y_train, loss_function):
 
     Notes
     -----
-    - Requires global variables `X_train` and `y_train` to be defined.
-    - Requires the helper function `loss_function(y_true, y_pred)` to compute RMSE.
     - Interactive controls: click, drag, and zoom in the 3D surface for exploration.
 
     Example
@@ -340,6 +338,14 @@ def interactive_loss_landscape(X_train, y_train, loss_function):
     >>> interactive_loss_landscape()
     # Opens an interactive 3D + heatmap visualization of the loss surface
     """
+    def loss_function(y, y_prediction):
+        """Calculates model loss (RMSE)"""
+        error = y - y_prediction
+        squared_error = np.square(error)
+        mean_squared_error = np.mean(squared_error)
+        root_mean_squared_error = np.sqrt(mean_squared_error)
+    return root_mean_squared_error
+    
     # --- 1. Compute grid for (w, b) ---
     w_ls, b_ls = np.polyfit(np.asarray(X_train).ravel(), np.asarray(y_train).ravel(), 1)
 
@@ -392,27 +398,41 @@ import matplotlib.pyplot as plt
 from ipywidgets import FloatSlider, HBox, VBox, HTML, interactive_output
 from sklearn.linear_model import LinearRegression
 
-def manually_train_linear_regression(X_train, y_train, loss_function):
-  # Set up sliders for w and b
-  w_slider = FloatSlider(description="w (slope)", value=1.0, min=-5.0, max=5.0, step=0.05, readout_format=".2f")
-  b_slider = FloatSlider(description="b (intercept)", value=1.0, min=-100.0, max=200.0, step=0.5, readout_format=".1f")
-  status_label = HTML("<b>RMSE:</b> (move sliders)")
+def manually_train_linear_regression(X_train, y_train):
 
-  linreg = LinearRegression()
-  linreg.fit(X_train.reshape(-1,1), y_train)
-  y_best = linreg.predict(X_train.reshape(-1,1))
-  min_rmse = loss_function(y_train, y_best)
-
-  # Plotting function that updates with the sliders
-  def update_plot(w, b):
+    # helper functions
+    def loss_function(y, y_prediction):
+        """Calculates model loss (RMSE)"""
+        error = y - y_prediction
+        squared_error = np.square(error)
+        mean_squared_error = np.mean(squared_error)
+        root_mean_squared_error = np.sqrt(mean_squared_error)
+        return root_mean_squared_error
+        
+    def model(x, w, b):
+        """Linear Regression Model"""
+        return w*x + b
+        
+    # Set up sliders for w and b
+    w_slider = FloatSlider(description="w (slope)", value=1.0, min=-5.0, max=5.0, step=0.05, readout_format=".2f")
+    b_slider = FloatSlider(description="b (intercept)", value=1.0, min=-100.0, max=200.0, step=0.5, readout_format=".1f")
+    status_label = HTML("<b>RMSE:</b> (move sliders)")
+    
+    linreg = LinearRegression()
+    linreg.fit(X_train.reshape(-1,1), y_train)
+    y_best = linreg.predict(X_train.reshape(-1,1))
+    min_rmse = loss_function(y_train, y_best)
+    
+    # Plotting function that updates with the sliders
+    def update_plot(w, b):
       y_pred = model(X_train.flatten(), w, b)
       current_rmse = loss_function(y_train, y_pred)
-
+    
       plt.figure(figsize=(6.5, 4.5))
       plt.scatter(X_train, y_train, color='k',label="Data")
       xs = np.linspace(X_train.min(), X_train.max(), 200)
       ys = model(xs, w, b)
-
+    
       plt.plot(xs, ys, color='r', label="Your model")
       plt.xlabel("Molecular weight (x)")
       plt.ylabel("Boiling point (y)")
@@ -420,17 +440,17 @@ def manually_train_linear_regression(X_train, y_train, loss_function):
       plt.legend()
       plt.grid(True)
       plt.show()
-
+    
       # Update status
       if current_rmse <= 1.2 * min_rmse:  # within 20% of best possible
           status_label.value = f"<b>RMSE:</b> {current_rmse:.3f} ✅ SUCCESS!"
       else:
           status_label.value = f"<b>RMSE:</b> {current_rmse:.3f} ❌ KEEP TRAINING "
-
-  # interactive output
-  out = interactive_output(update_plot, {"w": w_slider, "b": b_slider})
-  ui = VBox([HBox([w_slider, b_slider]), status_label])
-  display(ui, out)
+    
+    # interactive output
+    out = interactive_output(update_plot, {"w": w_slider, "b": b_slider})
+    ui = VBox([HBox([w_slider, b_slider]), status_label])
+    display(ui, out)
 
 def interactive_gradient_descent(X_train, y_train):
     """
