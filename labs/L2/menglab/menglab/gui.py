@@ -727,7 +727,7 @@ def interactive_gradient_descent(X_train, y_train):
 import matplotlib.pyplot as plt
 import numpy as np
 
-def plot_performance(w, b):
+def plot_performance(w, b, X_train, y_train, X_test, y_test):
     """Plot regression and parity plots side by side."""
     def model(x, w, b):
         return w*x + b
