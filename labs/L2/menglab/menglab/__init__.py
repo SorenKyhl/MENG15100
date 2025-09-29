@@ -8,12 +8,25 @@ from .load import (
     load_multilinear_alkanes,
 )
 
+from .gui import (
+    data_exploere,
+    interactive_loss_landscape,
+    manually_train_linear_regression,
+    interactive_gradient_descent
+)
+
 __all__ = [
+    # load
     "load_dataset",
     "load_full_dataset",
     "load_alkanes",
     "load_expanded_alkanes",
     "load_multilinear_alkanes",
+    # gui
+    "data_explorer",
+    "interactive_loss_landscape",
+    "manually_train_linear_regression",
+    "interactive_gradient_descent",
 ]
 
 # Optional: add version metadata
