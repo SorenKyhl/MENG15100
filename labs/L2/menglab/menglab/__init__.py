@@ -9,7 +9,7 @@ from .load import (
 )
 
 from .gui import (
-    data_exploere,
+    data_explorer,
     interactive_loss_landscape,
     manually_train_linear_regression,
     interactive_gradient_descent
