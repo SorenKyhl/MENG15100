@@ -729,6 +729,8 @@ import numpy as np
 
 def plot_performance(w, b):
     """Plot regression and parity plots side by side."""
+    def model(x, w, b):
+        return w*x + b
 
     # Predictions
     y_pred_train = model(X_train, w, b)
