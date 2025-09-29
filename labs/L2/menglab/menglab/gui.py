@@ -338,13 +338,8 @@ def interactive_loss_landscape(X_train, y_train):
     >>> interactive_loss_landscape(X_train, y_train)
     # Opens an interactive 3D + heatmap visualization of the loss surface
     """
-    def loss_function(y, y_prediction):
-        """Calculates model loss (RMSE)"""
-        error = y - y_prediction
-        squared_error = np.square(error)
-        mean_squared_error = np.mean(squared_error)
-        root_mean_squared_error = np.sqrt(mean_squared_error)
-        return root_mean_squared_error
+    def loss_function(y, y_pred):
+        return float(np.sqrt(np.mean((np.asarray(y) - np.asarray(y_pred))**2)))
     
     # --- 1. Compute grid for (w, b) ---
     w_ls, b_ls = np.polyfit(np.asarray(X_train).ravel(), np.asarray(y_train).ravel(), 1)
@@ -401,13 +396,8 @@ from sklearn.linear_model import LinearRegression
 def manually_train_linear_regression(X_train, y_train):
 
     # helper functions
-    def loss_function(y, y_prediction):
-        """Calculates model loss (RMSE)"""
-        error = y - y_prediction
-        squared_error = np.square(error)
-        mean_squared_error = np.mean(squared_error)
-        root_mean_squared_error = np.sqrt(mean_squared_error)
-        return root_mean_squared_error
+    def loss_function(y, y_pred):
+        return float(np.sqrt(np.mean((np.asarray(y) - np.asarray(y_pred))**2)))
         
     def model(x, w, b):
         """Linear Regression Model"""
