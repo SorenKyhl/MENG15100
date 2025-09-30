@@ -229,7 +229,7 @@ def load_full_dataset(save_csv: bool = False) -> pd.DataFrame:
     # add branching index 
     df_alkanes_combined["branching_index"] = df_alkanes_combined["smiles"].apply(branching_index_from_smiles)
     # add log MW as own feature column
-    df['logMW'] = np.log(df['MW'])
+    df_alkanes_combined['logMW'] = np.log(df_alkanes_combined['MW'])
 
     if save_csv:
         df_bpdata_desc.to_csv("bpdata_full_with_descriptors.csv", index=False)
@@ -240,7 +240,7 @@ def load_full_dataset(save_csv: bool = False) -> pd.DataFrame:
 
 def load_full_train_test_split():
   from sklearn.model_selection import train_test_split
-  df = menglab.load_full_dataset()
+  df = load_full_dataset()
 
   # Select features (molecular properties) and target (boiling point)
   # We will use numerical columns as features, excluding the target itself
