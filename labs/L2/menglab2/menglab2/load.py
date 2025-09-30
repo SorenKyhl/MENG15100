@@ -238,6 +238,23 @@ def load_full_dataset(save_csv: bool = False) -> pd.DataFrame:
 
     return df_alkanes_combined
 
+def load_full_train_test_split():
+  from sklearn.model_selection import train_test_split
+  df = menglab.load_full_dataset()
+
+  # Select features (molecular properties) and target (boiling point)
+  # We will use numerical columns as features, excluding the target itself
+  feature_cols = ['MW', 'logMW', 'branching_index', 'LogP', 'TPSA', 'RotatableBonds', 'HBD', 'HBA', 'OxygenCount']
+
+  # Combine features and target for dropping rows with missing values
+  combined_data = df[feature_cols + ['bp_k']].dropna()
+
+  X = combined_data[feature_cols] # Features
+  y = combined_data['bp_k'] # Target
+
+  # Split data into training and testing sets
+  X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+  return X_train, X_test, y_train, y_test
 
 def load_dataset():
     """
