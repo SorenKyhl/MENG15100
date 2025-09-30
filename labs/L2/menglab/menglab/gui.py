@@ -1037,4 +1037,285 @@ def plot_model_losses(model_names, train_losses, test_losses):
     plt.tight_layout()
     plt.show()
 
+def plot_multiple_linear_regression(X_train, X_test, y_train, y_test, renderer: str | None = None):
+    """
+    Colab-friendly 3D regression plot for:
+        features = [log(MW), branching_index]  ->  bp_k
+    Returns the Plotly figure (does not auto-plot).
+    """
+    import numpy as np, pandas as pd
+    from sklearn.linear_model import LinearRegression
+    from sklearn.metrics import mean_squared_error, r2_score
+    import plotly.graph_objects as go, plotly.io as pio
+
+    # Renderer: default to 'colab'
+    if renderer is None:
+        try:
+            pio.renderers.default = "colab"
+            renderer_used = "colab"
+        except Exception:
+            pio.renderers.default = "png"
+            renderer_used = "png"
+    else:
+        pio.renderers.default = renderer
+        renderer_used = renderer
+
+    # Safety checks
+    for name, arr in [("X_train", X_train), ("X_test", X_test),
+                      ("y_train", y_train), ("y_test", y_test)]:
+        if arr is None:
+            raise ValueError(f"{name} is not defined")
+    for col in ["MW", "branching_index"]:
+        if col not in X_train or col not in X_test:
+            raise ValueError(f"Missing {col} in dataset")
+    if not (np.all(X_train["MW"] > 0) and np.all(X_test["MW"] > 0)):
+        raise ValueError("All MW values must be > 0")
+
+    # Build features
+    lmw_tr, bi_tr = np.log(X_train["MW"].values), X_train["branching_index"].values
+    lmw_te, bi_te = np.log(X_test["MW"].values),  X_test["branching_index"].values
+    Xtr, Xte = np.column_stack([lmw_tr, bi_tr]), np.column_stack([lmw_te, bi_te])
+    ytr, yte = np.asarray(y_train).ravel(), np.asarray(y_test).ravel()
+
+    # Fit model
+    model = LinearRegression().fit(Xtr, ytr)
+    ytr_pred, yte_pred = model.predict(Xtr), model.predict(Xte)
+
+    # Metrics
+    rmse_tr = float(np.sqrt(mean_squared_error(ytr, ytr_pred)))
+    rmse_te = float(np.sqrt(mean_squared_error(yte, yte_pred)))
+    r2_tr, r2_te = r2_score(ytr, ytr_pred), r2_score(yte, yte_pred)
+
+    # Plane
+    lmw_grid = np.linspace(min(lmw_tr.min(), lmw_te.min()),
+                           max(lmw_tr.max(), lmw_te.max()), 40)
+    bi_grid  = np.linspace(min(bi_tr.min(), bi_te.min()),
+                           max(bi_tr.max(), bi_te.max()), 40)
+    LMW, BI = np.meshgrid(lmw_grid, bi_grid)
+    plane_Y = model.predict(np.column_stack([LMW.ravel(), BI.ravel()])).reshape(LMW.shape)
+
+    # Plot
+    fig = go.Figure()
+    fig.add_trace(go.Scatter3d(x=lmw_tr, y=bi_tr, z=ytr,
+                               mode="markers", name="train",
+                               marker=dict(size=4, color="royalblue")))
+    fig.add_trace(go.Scatter3d(x=lmw_te, y=bi_te, z=yte,
+                               mode="markers", name="test",
+                               marker=dict(size=4, color="firebrick")))
+    fig.add_trace(go.Surface(x=LMW, y=BI, z=plane_Y,
+                             name="fit plane", showscale=False, opacity=0.5))
+
+    fig.update_layout(
+        width=900, height=700,
+        title="Linear Regression Plane • log(MW), branching_index → bp_k",
+        scene=dict(
+            xaxis_title="log(MW)", yaxis_title="branching_index", zaxis_title="Boiling Point (K)",
+            aspectmode="cube",
+            camera=dict(eye=dict(x=1.4, y=1.4, z=1.4), projection=dict(type="orthographic"))
+        )
+    )
+
+    # Print info
+    coef, intercept = model.coef_.ravel(), float(model.intercept_)
+    print("Fitted equation:")
+    print(f"  y = {intercept:.6g} + ({coef[0]:.6g})·log(MW) + ({coef[1]:.6g})·branching_index")
+    print("\nMetrics:")
+    print(f"  Train RMSE = {rmse_tr:.6g}  Train R² = {r2_tr:.6g}")
+    print(f"  Test  RMSE = {rmse_te:.6g}  Test  R² = {r2_te:.6g}")
+    print(f"[Renderer: {renderer_used}]")
+
+    return fig
+
+def interactive_multiple_linear_regression(X_train, X_test, y_train, y_test):
+    """
+    GUI for predicting boiling point (bp_k) using selectable features:
+      - MW
+      - log(MW)   (ignored if any MW <= 0 in either split; a note is shown)
+      - branching_index
+
+    Behavior:
+      - If exactly one feature is selected -> fitted line vs that feature (plus actual train/test points).
+      - If multiple features are selected -> plot predictions as points vs MW (ŷ vs MW) for TRAIN and TEST,
+        with faint gray actual points for context.
+
+    Requires: X_train, X_test (pandas DataFrames), y_train, y_test (array-like).
+    """
+    import numpy as np
+    import pandas as pd
+    import matplotlib.pyplot as plt
+    from ipywidgets import Checkbox, HBox, VBox, Output, HTML, Button
+    from IPython.display import display, clear_output
+    from sklearn.linear_model import LinearRegression
+    from sklearn.metrics import mean_squared_error, r2_score
+
+    # ---- Safety checks ----
+    for name, arr in [("X_train", X_train), ("X_test", X_test),
+                      ("y_train", y_train), ("y_test", y_test)]:
+        if arr is None:
+            raise ValueError(f"{name} is not defined")
+    if not isinstance(X_train, pd.DataFrame) or not isinstance(X_test, pd.DataFrame):
+        raise TypeError("X_train and X_test must be pandas DataFrames.")
+    if len(X_train) != len(y_train) or len(X_test) != len(y_test):
+        raise ValueError("X/y train/test lengths do not match.")
+
+    def _ensure_cols(X, cols):
+        missing = [c for c in cols if c not in X.columns]
+        if missing:
+            raise ValueError(f"X is missing required columns: {missing}")
+
+    # ---- Widgets ----
+    w_mw   = Checkbox(value=True,  description="MW")
+    w_lmw  = Checkbox(value=False, description="log(MW)")
+    w_bi   = Checkbox(value=False, description="branching_index")
+    btn_fit = Button(description="Fit / Plot", button_style="success")
+    status  = HTML()
+    out     = Output()
+
+    # ---- Helpers ----
+    def _build_selected_names():
+        """Return list of selected feature names validated across both splits."""
+        selected = []
+        if w_mw.value:
+            selected.append("MW")
+        if w_lmw.value and ("MW" in X_train.columns) and ("MW" in X_test.columns):
+            mw_tr = X_train["MW"].values
+            mw_te = X_test["MW"].values
+            if (mw_tr > 0).all() and (mw_te > 0).all():
+                selected.append("log(MW)")
+        if w_bi.value:
+            selected.append("branching_index")
+        if len(selected) == 0:
+            selected = ["MW"]
+        return selected
+
+    def _design_from_names(names, X_df):
+        cols = []
+        for nm in names:
+            if nm == "MW":
+                _ensure_cols(X_df, ["MW"])
+                cols.append(X_df["MW"].values)
+            elif nm == "log(MW)":
+                _ensure_cols(X_df, ["MW"])
+                cols.append(np.log(X_df["MW"].values))
+            elif nm == "branching_index":
+                _ensure_cols(X_df, ["branching_index"])
+                cols.append(X_df["branching_index"].values)
+        return np.column_stack(cols)
+
+    def _fit_and_plot(_=None):
+        with out:
+            clear_output(wait=True)
+
+            # Active features and design matrices
+            active = _build_selected_names()
+            Xtr = _design_from_names(active, X_train)
+            Xte = _design_from_names(active, X_test)
+            ytr = np.asarray(y_train).ravel()
+            yte = np.asarray(y_test).ravel()
+
+            model = LinearRegression()
+            model.fit(Xtr, ytr)
+
+            ytr_pred = model.predict(Xtr)
+            yte_pred = model.predict(Xte)
+
+            rmse_tr = float(np.sqrt(mean_squared_error(ytr, ytr_pred)))
+            r2_tr   = float(r2_score(ytr, ytr_pred))
+            rmse_te = float(np.sqrt(mean_squared_error(yte, yte_pred)))
+            r2_te   = float(r2_score(yte, yte_pred))
+
+            mw_tr = X_train["MW"].values if "MW" in X_train.columns else None
+            mw_te = X_test["MW"].values  if "MW" in X_test.columns  else None
+
+            plt.figure(figsize=(8.6, 5.6))
+
+            if len(active) == 1:
+                # --- Single feature: fitted line + actuals ---
+                feat = active[0]
+                if feat == "MW":
+                    xtr = mw_tr; xte = mw_te; xlabel = "MW"
+                    x_all = np.concatenate([xtr, xte])
+                    xg = np.linspace(x_all.min(), x_all.max(), 200).reshape(-1, 1)
+                    yg = model.predict(xg)
+
+                    plt.scatter(xtr, ytr, label="train actual", alpha=0.9)
+                    plt.scatter(xte, yte, label="test actual",  alpha=0.9)
+                    plt.plot(xg.ravel(), yg, color="black", linewidth=2.2, label="fit (train)")
+
+                elif feat == "log(MW)":
+                    xtr = np.log(mw_tr); xte = np.log(mw_te); xlabel = "log(MW)"
+                    x_all = np.concatenate([xtr, xte])
+                    xg = np.linspace(x_all.min(), x_all.max(), 200).reshape(-1, 1)
+                    yg = model.predict(xg)
+
+                    plt.scatter(xtr, ytr, label="train actual", alpha=0.9)
+                    plt.scatter(xte, yte, label="test actual",  alpha=0.9)
+                    plt.plot(xg.ravel(), yg, color="black", linewidth=2.2, label="fit (train)")
+
+                else:  # branching_index
+                    xtr = X_train["branching_index"].values
+                    xte = X_test["branching_index"].values
+                    xlabel = "branching_index"
+                    x_all = np.concatenate([xtr, xte])
+                    xg = np.linspace(x_all.min(), x_all.max(), 200).reshape(-1, 1)
+                    yg = model.predict(xg)
+
+                    plt.scatter(xtr, ytr, label="train actual", alpha=0.9)
+                    plt.scatter(xte, yte, label="test actual",  alpha=0.9)
+                    plt.plot(xg.ravel(), yg, color="black", linewidth=2.2, label="fit (train)")
+
+                title = f"Linear Regression • {feat}"
+
+            else:
+                # --- Multi-feature: predictions vs MW (plus faint actuals for context) ---
+                if ("MW" not in X_train.columns) or ("MW" not in X_test.columns):
+                    raise ValueError("MW column is required to plot predictions vs MW for multi-feature models.")
+
+                # Context: faint actuals
+                plt.scatter(mw_tr, ytr, label="train actual (faint)", alpha=0.25, s=30, color="gray", zorder=1)
+                plt.scatter(mw_te, yte, label="test actual (faint)",  alpha=0.25, s=30, color="lightgray", zorder=1)
+
+                # Preds: hollow, colored edges, high z-order so they pop
+                plt.scatter(mw_tr, ytr_pred, label="ŷ train (vs MW)", alpha=1.0, s=70,
+                            facecolors='none', edgecolors='tab:orange', linewidths=2.0, zorder=5)
+                plt.scatter(mw_te, yte_pred, label="ŷ test (vs MW)",  alpha=1.0, s=90, marker='^',
+                            facecolors='none', edgecolors='tab:green', linewidths=2.2, zorder=6)
+
+                xlabel = "MW"
+                title = f"Linear Regression • {', '.join(active)} (predictions vs MW)"
+
+            plt.xlabel(xlabel)
+            plt.ylabel("Boiling Point (K)")
+            plt.title(title)
+            plt.legend()
+            plt.show()
+
+            # Equation + metrics
+            coef = model.coef_.ravel()
+            intercept = float(model.intercept_)
+            print("Equation (features in order):", ", ".join(active))
+            if len(active) == 1:
+                print(f"  y = {intercept:.6g} + ({coef[0]:.6g})·{active[0]}")
+            else:
+                terms = " + ".join([f"({coef[i]:.6g})·{active[i]}" for i in range(len(active))])
+                print(f"  y = {intercept:.6g} + {terms}")
+
+            # Warnings
+            warn_msgs = []
+            if w_lmw.value and "log(MW)" not in active:
+                warn_msgs.append("log(MW) ignored because some MW ≤ 0 in train or test.")
+            status.value = ("<b>Note:</b> " + " • ".join(warn_msgs)) if warn_msgs else ""
+
+            print("\nMetrics:")
+            print(f"  Train RMSE = {rmse_tr:.6g}    Train R² = {r2_tr:.6g}")
+            print(f"  Test  RMSE = {rmse_te:.6g}    Test  R² = {r2_te:.6g}")
+
+    # Wire up + display
+    controls = HBox([w_mw, w_lmw, w_bi, btn_fit])
+    display(VBox([controls, status, out]))
+    btn_fit.on_click(_fit_and_plot)
+
+    # Initial fit
+    _fit_and_plot()
+
 
