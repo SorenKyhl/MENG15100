@@ -77,6 +77,29 @@ def load_full_dataset(save_csv: bool = False) -> pd.DataFrame:
             sum(1 for atom in mol.GetAtoms() if atom.GetAtomicNum() == 8),
         ]
 
+    def branching_index_from_smiles(smiles: str) -> int:
+      """
+      Calculate a simple branching index for a molecule from its SMILES string.
+
+      Definition:
+        For each heavy atom, if degree > 2, add (degree - 2) to the index.
+
+      Returns 0 if SMILES parsing fails.
+      """
+      mol = Chem.MolFromSmiles(smiles)
+      if mol is None:
+          return 0  # could also return None
+
+      index = 0
+      for atom in mol.GetAtoms():
+          if atom.GetAtomicNum() == 1:  # skip hydrogens
+              continue
+          degree = atom.GetDegree()
+          if degree > 2:
+              index += (degree - 2)
+      return index
+
+
     # ============================================================
     # 1) Load bpdata from CRAN tarball (dataset shipped in `rcdk`)
     # ============================================================
@@ -203,12 +226,16 @@ def load_full_dataset(save_csv: bool = False) -> pd.DataFrame:
         [df_bpdata_desc[keep_cols], df_alkanes_desc[keep_cols]], ignore_index=True
     )
 
+    # add branching index 
+    df_alkanes_combined["branching_index"] = df_alkanes_combined["smiles"].apply(branching_index_from_smiles)
+
     if save_csv:
         df_bpdata_desc.to_csv("bpdata_full_with_descriptors.csv", index=False)
         df_alkanes_desc.to_csv("alkanes_curated_with_descriptors.csv", index=False)
         df_alkanes_combined.to_csv("combined_alkane_dataset.csv", index=False)
 
     return df_alkanes_combined
+
 
 def load_dataset():
     """
