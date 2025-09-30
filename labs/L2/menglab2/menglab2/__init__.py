@@ -15,7 +15,10 @@ from .gui import (
     interactive_gradient_descent,
     plot_performance,
     interactive_polynomial_regression,
-    plot_model_losses
+    plot_model_losses,
+    plot_multiple_linear_regression,
+    interactive_multiple_linear_regression,
+    interactive_full_linear_regression
 )
 
 __all__ = [
@@ -32,7 +35,10 @@ __all__ = [
     "interactive_gradient_descent",
     "plot_performance",
     "interactive_polynomial_regression",
-    "plot_model_losses"
+    "plot_model_losses",
+    "plot_multiple_linear_regression",
+    "interactive_multiple_linear_regression",
+    "interactive_full_linear_regression"
 ]
 
 # Optional: add version metadata
