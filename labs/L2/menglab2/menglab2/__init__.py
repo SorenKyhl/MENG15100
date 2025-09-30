@@ -3,6 +3,7 @@
 from .load import (
     load_dataset,
     load_full_dataset,
+    load_full_train_test_split,
     load_alkanes,
     load_expanded_alkanes,
     load_multilinear_alkanes,
@@ -25,6 +26,7 @@ __all__ = [
     # load
     "load_dataset",
     "load_full_dataset",
+    "load_full_train_test_split",
     "load_alkanes",
     "load_expanded_alkanes",
     "load_multilinear_alkanes",
