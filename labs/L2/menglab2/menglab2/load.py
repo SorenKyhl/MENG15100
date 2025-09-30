@@ -228,6 +228,8 @@ def load_full_dataset(save_csv: bool = False) -> pd.DataFrame:
 
     # add branching index 
     df_alkanes_combined["branching_index"] = df_alkanes_combined["smiles"].apply(branching_index_from_smiles)
+    # add log MW as own feature column
+    df['logMW'] = np.log(df['MW'])
 
     if save_csv:
         df_bpdata_desc.to_csv("bpdata_full_with_descriptors.csv", index=False)
