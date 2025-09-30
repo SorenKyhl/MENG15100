@@ -802,7 +802,7 @@ def interactive_polynomial_regression(X_train, X_test, y_train, y_test):
     w_log = Checkbox(value=False, description="log(x)")
 
     w_model = Dropdown(options=["LinearRegression", "Ridge"], value="LinearRegression", description="Model")
-    w_alpha = FloatText(value=1.0, description="alpha (Ridge)", step=0.1, disabled=True)
+    w_alpha = FloatText(value=1.0, description="Lambda (Ridge)", step=0.1, disabled=True)
 
     btn_fit   = Button(description="Fit model", button_style="success")
     btn_reset = Button(description="Reset", button_style="warning")
