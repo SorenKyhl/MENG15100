@@ -1323,32 +1323,26 @@ def interactive_full_linear_regression(X_train, X_test, y_train, y_test):
     Interactive feature toggle + model selection for boiling point prediction, with
     INTERNAL FEATURE SCALING (StandardScaler) and subplot layout.
 
-    Uses existing splits X_train, X_test, y_train, y_test.
-    - Toggle any subset of feature_cols
-    - Pick model: LinearRegression, Ridge, Lasso, ElasticNet
-    - Adjust alpha (and l1_ratio for ElasticNet)
-    - Internally StandardScales selected features (fit on train, apply to both)
-    - Plots (single figure, 1x3 subplots):
-        (1) Train: y vs MW with predicted vs MW (points)
-        (2) Test : y vs MW with predicted vs MW (points)
-        (3) Parity plot (train + test) with y = x reference
-    - Prints metrics and coefficients transformed back to ORIGINAL feature space
+    - Models: LinearRegression, Ridge, Lasso (no ElasticNet)
+    - Regularization control is shown as λ (lambda)
+    - Controls and plot are displayed as separate roots (flush-left plots)
     """
     import numpy as np
     import pandas as pd
     import matplotlib.pyplot as plt
-    from ipywidgets import VBox, HBox, SelectMultiple, Dropdown, FloatLogSlider, FloatSlider, Button, Output, Label
+    from textwrap import fill as _wrap
+    from ipywidgets import (
+        VBox, HBox, SelectMultiple, Dropdown, FloatLogSlider, Button, Output, Label, Layout
+    )
     from IPython.display import display, clear_output
     from sklearn.preprocessing import StandardScaler
-    from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet
+    from sklearn.linear_model import LinearRegression, Ridge, Lasso
     from sklearn.metrics import mean_squared_error, r2_score
 
-    # ---- Config (edit if needed) ----
-    x_axis = "MW"  # used for x in the first two subplots
+    x_axis = "MW"
     feature_cols = ['MW','logMW','branching_index','LogP','TPSA',
                     'RotatableBonds','HBD','HBA','OxygenCount']
 
-    # ---- Sanity checks ----
     for name, obj in [("X_train", X_train), ("X_test", X_test),
                       ("y_train", y_train), ("y_test", y_test)]:
         if obj is None:
@@ -1358,39 +1352,36 @@ def interactive_full_linear_regression(X_train, X_test, y_train, y_test):
     if x_axis not in X_train.columns or x_axis not in X_test.columns:
         raise ValueError(f"x_axis '{x_axis}' must be a column in X_train and X_test.")
 
-    # Filter to features present in BOTH splits
     available_features = [c for c in feature_cols if c in X_train.columns and c in X_test.columns]
     if not available_features:
         raise ValueError("No overlapping feature columns found in X_train and X_test.")
 
     # ---- Widgets ----
+    # Default to MW only (fallback to first available feature if MW isn't present)
+    default_feats = (x_axis,) if x_axis in available_features else (available_features[0],)
     w_feats = SelectMultiple(
         options=available_features,
-        value=tuple(available_features),  # start with all on
+        value=default_feats,            # <-- changed from "all features" to MW-only
         description='Features',
-        rows=min(10, len(available_features))
+        rows=min(10, len(available_features)),
     )
     w_model = Dropdown(
-        options=["LinearRegression", "Ridge", "Lasso", "ElasticNet"],
-        value="Ridge",
-        description="Model"
+        options=["LinearRegression", "Ridge", "Lasso"],
+        value="LinearRegression",
+        description="Model",
     )
-    w_alpha = FloatLogSlider(value=1.0, base=10, min=-4, max=3, step=0.1, description="alpha")
-    w_l1    = FloatSlider(value=0.5, min=0.0, max=1.0, step=0.05, description="l1_ratio")
-    btn_fit = Button(description="Fit & Plot", button_style="success")
-    out     = Output()
+    w_lambda = FloatLogSlider(value=1.0, base=10, min=-4, max=3, step=0.1, description="λ (lambda)")
+    btn_fit  = Button(description="Fit & Plot", button_style="success")
 
-    # Enable/disable hyperparameter widgets based on model
+    # Remove label gutter
+    for w in (w_feats, w_model, w_lambda):
+        w.style = {'description_width': '0px'}
+
+    # Separate, full-width plot area (avoids form-grid indent)
+    out = Output(layout=Layout(width='100%', margin='0', padding='0'))
+
     def _toggle_hyperparams(*_):
-        if w_model.value == "LinearRegression":
-            w_alpha.disabled = True
-            w_l1.disabled = True
-        elif w_model.value in ("Ridge", "Lasso"):
-            w_alpha.disabled = False
-            w_l1.disabled = True
-        else:  # ElasticNet
-            w_alpha.disabled = False
-            w_l1.disabled = False
+        w_lambda.disabled = (w_model.value == "LinearRegression")
     w_model.observe(_toggle_hyperparams, names="value")
     _toggle_hyperparams()
 
@@ -1400,42 +1391,33 @@ def interactive_full_linear_regression(X_train, X_test, y_train, y_test):
 
             feats = list(w_feats.value) if len(w_feats.value) > 0 else [x_axis]
 
-            # Build design matrices from selected features
             Xtr_raw = X_train[feats].to_numpy(dtype=float)
             Xte_raw = X_test[feats].to_numpy(dtype=float)
             ytr = np.asarray(y_train, dtype=float).ravel()
             yte = np.asarray(y_test, dtype=float).ravel()
 
-            # ---- Internal scaling (fit on train) ----
             scaler = StandardScaler(with_mean=True, with_std=True)
             Xtr = scaler.fit_transform(Xtr_raw)
             Xte = scaler.transform(Xte_raw)
 
-            # ---- Choose & fit model ----
             model_name = w_model.value
             if model_name == "LinearRegression":
                 base = LinearRegression()
             elif model_name == "Ridge":
-                base = Ridge(alpha=float(w_alpha.value), random_state=0)
-            elif model_name == "Lasso":
-                base = Lasso(alpha=float(w_alpha.value), max_iter=10000, random_state=0)
-            else:
-                base = ElasticNet(alpha=float(w_alpha.value), l1_ratio=float(w_l1.value),
-                                  max_iter=10000, random_state=0)
+                base = Ridge(alpha=float(w_lambda.value), random_state=0)
+            else:  # Lasso
+                base = Lasso(alpha=float(w_lambda.value), max_iter=10000, random_state=0)
 
             base.fit(Xtr, ytr)
 
-            # ---- Predict ----
             ytr_pred = base.predict(Xtr)
             yte_pred = base.predict(Xte)
 
-            # ---- Metrics ----
             rmse_tr = float(np.sqrt(mean_squared_error(ytr, ytr_pred)))
             rmse_te = float(np.sqrt(mean_squared_error(yte, yte_pred)))
             r2_tr   = float(r2_score(ytr, ytr_pred))
             r2_te   = float(r2_score(yte, yte_pred))
 
-            # ---- Map coefficients back to ORIGINAL feature space ----
             coef_scaled = np.asarray(base.coef_, dtype=float).ravel()
             intercept_scaled = float(base.intercept_)
             mu = scaler.mean_.ravel()
@@ -1445,18 +1427,16 @@ def interactive_full_linear_regression(X_train, X_test, y_train, y_test):
             coef_orig = coef_scaled / sigma_safe
             intercept_orig = intercept_scaled - np.sum(coef_scaled * (mu / sigma_safe))
 
-            # ---- Plots: single figure with 3 subplots ----
-            fig, axes = plt.subplots(1, 3, figsize=(12, 5), constrained_layout=True)
+            # ---- Plots ----
+            fig, axes = plt.subplots(1, 3, figsize=(12.5, 5.0), layout='constrained')
 
-            # 1) Train: actual vs MW + predicted vs MW
             ax = axes[0]
             ax.plot(X_train[x_axis], y_train, 'ko', label='train actual', alpha=0.85)
             ax.plot(X_train[x_axis], ytr_pred, 'ro', label='train predicted', alpha=0.85)
             ax.set_xlabel(x_axis); ax.set_ylabel("bp_k")
-            ax.set_title(f"Train • {model_name}\nfeatures={feats}")
+            ax.set_title("Train")
             ax.legend(loc="best")
 
-            # 2) Test: actual vs MW + predicted vs MW
             ax = axes[1]
             ax.plot(X_test[x_axis], y_test, 'ko', label='test actual', alpha=0.85)
             ax.plot(X_test[x_axis], yte_pred, 'ro', label='test predicted', alpha=0.85)
@@ -1464,43 +1444,55 @@ def interactive_full_linear_regression(X_train, X_test, y_train, y_test):
             ax.set_title("Test")
             ax.legend(loc="best")
 
-            # 3) Parity plot
             ax = axes[2]
             lo = float(min(ytr.min(), yte.min(), ytr_pred.min(), yte_pred.min()))
             hi = float(max(ytr.max(), yte.max(), ytr_pred.max(), yte_pred.max()))
             ax.plot(ytr, ytr_pred, 'o', label='train', alpha=0.85)
             ax.plot(yte, yte_pred, 'o', label='test',  alpha=0.85)
-            ax.plot([lo, hi], [lo, hi], 'k--', linewidth=1.5, label='y = ŷ')
+            ax.plot([lo, hi], [lo, hi], 'k--', linewidth=1.5, label='y = x')
             ax.set_xlabel("Actual bp_k"); ax.set_ylabel("Predicted bp_k")
             ax.set_title("Parity")
             ax.legend(loc="best")
 
+            # Figure-level caption with selected features (prevents title overlap)
+            fig.suptitle(f"{model_name}", fontsize=12)
+            feat_label = "all" if set(feats) == set(available_features) else ", ".join(feats)
+            caption = _wrap(f"Features: {feat_label}", width=100)
+            try:
+                fig.supxlabel(caption, fontsize=9)
+            except Exception:
+                fig.subplots_adjust(bottom=0.22)
+                fig.text(0.01, 0.01, caption, ha='left', va='bottom', fontsize=9)
+
             plt.show()
 
-            # ---- Print metrics & coefficients (ORIGINAL space) ----
+            # ---- Print metrics & coefficients ----
             print(f"Model: {model_name}")
             if model_name != "LinearRegression":
-                print(f"  alpha = {float(w_alpha.value):.4g}")
-            if model_name == "ElasticNet":
-                print(f"  l1_ratio = {float(w_l1.value):.3f}")
+                print(f"  λ (lambda) = {float(w_lambda.value):.4g}")
 
             print("\nMetrics:")
             print(f"  Train RMSE = {rmse_tr:.4g}   Train R² = {r2_tr:.4f}")
             print(f"  Test  RMSE = {rmse_te:.4g}   Test  R² = {r2_te:.4f}")
 
-            print("\nCoefficients (mapped to ORIGINAL feature space):")
+            print("\nCoefficients:")
             for name, c in zip(feats, coef_orig):
                 print(f"  {name:16s} {c: .6g}")
             print(f"  {'intercept':16s} {intercept_orig: .6g}")
 
-    # Wire up + show
-    controls_top = HBox([w_model, w_alpha, w_l1, btn_fit])
-    ui = VBox([Label("Select features (Ctrl/Cmd to multi-select):"),
-               w_feats, controls_top, out])
-    display(ui)
-    btn_fit.on_click(_fit_and_plot)
+    # --- Layout: controls as one root; plots as another root (flush-left) ---
+    controls_top = HBox([w_model, w_lambda, btn_fit],
+                        layout=Layout(width='100%', justify_content='flex-start', align_items='center'))
+    controls_box = VBox([Label("Select features (Ctrl/Cmd to multi-select):"),
+                         w_feats,
+                         controls_top],
+                        layout=Layout(width='100%', align_items='flex-start'))
 
-    # Initial fit
+    display(controls_box)  # root 1
+    display(out)           # root 2
+
+    btn_fit.on_click(_fit_and_plot)
     _fit_and_plot()
+
 
 
