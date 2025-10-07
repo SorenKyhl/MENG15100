@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+from menglab3 import load
 
 def interactive_projection(projection_problem=False, df=None, n=250, random_state=42):
     """
@@ -13,7 +14,7 @@ def interactive_projection(projection_problem=False, df=None, n=250, random_stat
     # 1) Generate / load data
     # ----------------------------
     if df is None:
-        df = generate_projection_data(projection_problem, n=n, random_state=random_state)
+        df = load.generate_projection_data(projection_problem, n=n, random_state=random_state)
 
     # Split clusters
     df_A = df[df["cluster"] == "A"]
