@@ -566,7 +566,6 @@ def PCA_projection_3D(
 # pca_scatter_3d_plotly_toggle(X_pca, y=y_wine, pcs=(1,2,3), evr=pca.explained_variance_ratio_)
 
 # Step 1: Setup
-%matplotlib inline
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.datasets import make_blobs
