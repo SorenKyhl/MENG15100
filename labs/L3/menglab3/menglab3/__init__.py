@@ -1,12 +1,16 @@
 # menglab/__init__.py
 
-from .hello import (
-    hello
+from .load import (
+    generate_projection_data,
+    generate_PCA_data,
+    generate_kmeans_data
 )
 
 __all__ = [
-    # hello
-    "hello"
+    # load
+    "generate_projection_data", 
+    "generate_PCA_data",
+    "generate_kmeans_data"
 ]
 
 # Optional: add version metadata
