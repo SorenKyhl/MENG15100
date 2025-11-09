@@ -8,12 +8,19 @@ from .gui import (
     interactive_single_layer_model
 )
 
+from .pytorch_training import(
+    set_pytorch_seed
+    plot_model_predictions_pytorch
+)
 
 __all__ = [
     # load
     # gui
     "interactive_activation_functions",
     "interactive_single_layer_model"
+    # pytorch_training
+    "set_pytorch_seed"
+    "plot_model_predictions_pytorch"
 ]
 
 # Optional: add version metadata
