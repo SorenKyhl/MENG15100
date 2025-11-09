@@ -119,6 +119,7 @@ def generate_circle_train_test_split(dataset_name='circle', n_samples=500,
         Train/test splits
     """
     import numpy as np
+    import matplotlib.pyplot as plt
     from sklearn.model_selection import train_test_split
 
     # Generate data
