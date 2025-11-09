@@ -1,6 +1,7 @@
 # menglab/__init__.py
 
 from .load import (
+    generate_circle_data
 )
 
 from .gui import (
@@ -18,6 +19,7 @@ from .pytorch_training import(
 
 __all__ = [
     # load
+    "generate_circle_data",
     # gui
     "interactive_activation_functions",
     "interactive_single_layer_model",
