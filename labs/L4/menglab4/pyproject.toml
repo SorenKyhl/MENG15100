@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "menglab4"
-version = "0.0.1"
+version = "0.0.2"
 description = "Utilities for MENG15100 L4 labs"
 authors = [{ name = "Soren Kyhl" }]
 license = { text = "MIT" }
