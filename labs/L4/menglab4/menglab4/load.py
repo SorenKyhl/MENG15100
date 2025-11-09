@@ -75,6 +75,7 @@ def plot_circle_dataset(X, y, title="Dataset", ax=None):
     ax : matplotlib axis, optional
         Axis to plot on
     """
+    import matplotlib.pyplot as plt
     if ax is None:
         fig, ax = plt.subplots(figsize=(8, 8))
     
