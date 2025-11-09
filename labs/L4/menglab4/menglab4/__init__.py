@@ -9,18 +9,22 @@ from .gui import (
 )
 
 from .pytorch_training import(
-    set_pytorch_seed
-    plot_model_predictions_pytorch
+    set_pytorch_seed,
+    plot_model_predictions_pytorch,
+    plot_pytorch_training
+
+
 )
 
 __all__ = [
     # load
     # gui
     "interactive_activation_functions",
-    "interactive_single_layer_model"
+    "interactive_single_layer_model",
     # pytorch_training
-    "set_pytorch_seed"
-    "plot_model_predictions_pytorch"
+    "set_pytorch_seed",
+    "plot_model_predictions_pytorch",
+    "plot_pytorch_training"
 ]
 
 # Optional: add version metadata
