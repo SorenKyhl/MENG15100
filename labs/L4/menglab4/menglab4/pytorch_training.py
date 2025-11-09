@@ -138,3 +138,123 @@ def plot_pytorch_training(model, X_train, X_test, y_train, y_test, losses):
 
     plt.tight_layout()
     plt.show()
+
+def plot_circle_results(model, X_train, y_train, X_test, y_test,
+                        train_losses, test_losses, train_accs, test_accs):
+    """
+    Visualize classification results with decision boundary and training curves.
+    """
+    fig = plt.figure(figsize=(12, 12))
+    
+    # ========================================================================
+    # TOP: Decision Boundary
+    # ========================================================================
+    ax1 = plt.subplot(2, 1, 1)
+    
+    # Create mesh grid for decision boundary
+    x_min, x_max = -6, 6
+    y_min, y_max = -6, 6
+    h = 0.1  # Step size
+    xx, yy = np.meshgrid(np.arange(x_min, x_max, h),
+                         np.arange(y_min, y_max, h))
+    
+    # Predict probability for each point in the mesh
+    model.eval()
+    with torch.no_grad():
+        grid_points = torch.FloatTensor(np.c_[xx.ravel(), yy.ravel()])
+        Z = model(grid_points).numpy()
+    Z = Z.reshape(xx.shape)
+    
+    # Plot decision boundary (color-coded by probability)
+    contour = ax1.contourf(xx, yy, Z, levels=20, cmap='RdYlBu', alpha=0.6)
+    ax1.contour(xx, yy, Z, levels=[0.5], colors='black', linewidths=2.5,
+               linestyles='--')
+    plt.colorbar(contour, ax=ax1, label='P(Class 1)')
+    
+    # Plot training data
+    X_train_np = X_train.numpy()
+    y_train_np = y_train.numpy().ravel()
+    ax1.scatter(X_train_np[y_train_np == 0, 0], X_train_np[y_train_np == 0, 1],
+               c='blue', s=50, alpha=0.7, edgecolors='black', linewidth=0.5,
+               label='Train Class 0 (Inner)', marker='o')
+    ax1.scatter(X_train_np[y_train_np == 1, 0], X_train_np[y_train_np == 1, 1],
+               c='red', s=50, alpha=0.7, edgecolors='black', linewidth=0.5,
+               label='Train Class 1 (Outer)', marker='o')
+    
+    # Plot test data
+    X_test_np = X_test.numpy()
+    y_test_np = y_test.numpy().ravel()
+    ax1.scatter(X_test_np[y_test_np == 0, 0], X_test_np[y_test_np == 0, 1],
+               c='blue', s=80, alpha=0.9, edgecolors='yellow', linewidth=2.5,
+               label='Test Class 0', marker='s')
+    ax1.scatter(X_test_np[y_test_np == 1, 0], X_test_np[y_test_np == 1, 1],
+               c='red', s=80, alpha=0.9, edgecolors='yellow', linewidth=2.5,
+               label='Test Class 1', marker='s')
+    
+    ax1.set_xlim(x_min, x_max)
+    ax1.set_ylim(y_min, y_max)
+    ax1.set_xlabel('x₁ (Feature 1)', fontsize=12)
+    ax1.set_ylabel('x₂ (Feature 2)', fontsize=12)
+    ax1.set_title('Decision Boundary\n(Black dashed line = 50% probability)',
+                 fontsize=14, fontweight='bold')
+    ax1.legend(fontsize=9, loc='upper right')
+    ax1.grid(True, alpha=0.3)
+    # Remove set_aspect('equal') to allow natural sizing
+    
+    # ========================================================================
+    # BOTTOM LEFT: Loss Curves
+    # ========================================================================
+    ax2 = plt.subplot(2, 2, 3)
+    
+    epochs = range(len(train_losses))
+    ax2.plot(epochs, train_losses, label='Train Loss',
+            linewidth=2.5, alpha=0.8, color='steelblue')
+    ax2.plot(epochs, test_losses, label='Test Loss',
+            linewidth=2.5, alpha=0.8, color='coral')
+    
+    ax2.set_xlabel('Epoch', fontsize=12)
+    ax2.set_ylabel('Loss (BCE)', fontsize=12)
+    ax2.set_title('Training History - Loss', fontsize=13, fontweight='bold')
+    ax2.legend(fontsize=11)
+    ax2.grid(True, alpha=0.3)
+    ax2.set_yscale('log')
+    
+    # Add final loss annotation
+    final_train_loss = train_losses[-1]
+    final_test_loss = test_losses[-1]
+    ax2.text(0.98, 0.97,
+            f'Final Train: {final_train_loss:.4f}\nFinal Test: {final_test_loss:.4f}',
+            transform=ax2.transAxes,
+            verticalalignment='top', horizontalalignment='right',
+            bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5),
+            fontsize=10)
+    
+    # ========================================================================
+    # BOTTOM RIGHT: Accuracy Curves
+    # ========================================================================
+    ax3 = plt.subplot(2, 2, 4)
+    
+    ax3.plot(epochs, [acc * 100 for acc in train_accs],
+            label='Train Accuracy', linewidth=2.5, alpha=0.8, color='steelblue')
+    ax3.plot(epochs, [acc * 100 for acc in test_accs],
+            label='Test Accuracy', linewidth=2.5, alpha=0.8, color='coral')
+    
+    ax3.set_xlabel('Epoch', fontsize=12)
+    ax3.set_ylabel('Accuracy (%)', fontsize=12)
+    ax3.set_title('Training History - Accuracy', fontsize=13, fontweight='bold')
+    ax3.legend(fontsize=11)
+    ax3.grid(True, alpha=0.3)
+    ax3.set_ylim(0, 105)
+    
+    # Add final accuracy annotation
+    final_train_acc = train_accs[-1] * 100
+    final_test_acc = test_accs[-1] * 100
+    ax3.text(0.98, 0.03,
+            f'Final Train: {final_train_acc:.1f}%\nFinal Test: {final_test_acc:.1f}%',
+            transform=ax3.transAxes,
+            verticalalignment='bottom', horizontalalignment='right',
+            bbox=dict(boxstyle='round', facecolor='lightgreen', alpha=0.5),
+            fontsize=10, fontweight='bold')
+    
+    plt.tight_layout()
+    plt.show()
