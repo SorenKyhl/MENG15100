@@ -4,11 +4,13 @@ from .load import (
 )
 
 from .gui import (
+    interactive_activation_functions
 )
 
 
 __all__ = [
     # load
+    "interactive_activation_functions"
     # gui
 ]
 
