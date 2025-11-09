@@ -4,14 +4,16 @@ from .load import (
 )
 
 from .gui import (
-    interactive_activation_functions
+    interactive_activation_functions,
+    interactive_single_layer_model
 )
 
 
 __all__ = [
     # load
-    "interactive_activation_functions"
     # gui
+    "interactive_activation_functions",
+    "interactive_single_layer_model"
 ]
 
 # Optional: add version metadata
