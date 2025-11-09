@@ -14,7 +14,7 @@ from .gui import (
 from .pytorch_training import(
     set_pytorch_seed,
     plot_model_predictions_pytorch,
-    plot_pytorch_training
+    plot_pytorch_training,
     plot_circle_results
 
 
