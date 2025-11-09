@@ -1,7 +1,9 @@
 # menglab/__init__.py
 
 from .load import (
-    generate_circle_data
+    generate_circle_data,
+    plot_circle_dataset,
+    generate_circle_train_test_split
 )
 
 from .gui import (
@@ -21,6 +23,8 @@ from .pytorch_training import(
 __all__ = [
     # load
     "generate_circle_data",
+    "plot_circle_dataset",
+    "generate_circle_train_test_split",
     # gui
     "interactive_activation_functions",
     "interactive_single_layer_model",
