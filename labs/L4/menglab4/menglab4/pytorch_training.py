@@ -258,3 +258,155 @@ def plot_circle_results(model, X_train, y_train, X_test, y_test,
     
     plt.tight_layout()
     plt.show()
+
+
+def train_mnist(model, n_epochs=5):
+    import torch
+    import torch.nn as nn
+    import torch.optim as optim
+    from torch.utils.data import DataLoader
+    from torchvision import datasets, transforms
+    import matplotlib.pyplot as plt
+    import numpy as np
+    from pathlib import Path
+    import random
+
+    def set_seed(seed=42):
+        random.seed(seed)
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+
+    def get_device():
+        return torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    def build_model():
+        return nn.Sequential(
+            nn.Flatten(),          
+            nn.Linear(784, 16),   
+            nn.ReLU(),    
+            nn.Linear(16, 10)     
+        )
+
+    def train_one_epoch(model, loader, loss_fn, optimizer, device):
+        model.train()
+        running_loss, correct, total = 0.0, 0, 0
+        for x, y in loader:
+            x, y = x.to(device), y.to(device)
+            logits = model(x)
+            loss = loss_fn(logits, y)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            running_loss += loss.item() * x.size(0)
+            correct += (logits.argmax(dim=1) == y).sum().item()
+            total += y.size(0)
+        return running_loss / total, correct / total
+
+    @torch.no_grad()
+    def evaluate(model, loader, loss_fn, device):
+        model.eval()
+        running_loss, correct, total = 0.0, 0, 0
+        for x, y in loader:
+            x, y = x.to(device), y.to(device)
+            logits = model(x)
+            loss = loss_fn(logits, y)
+            running_loss += loss.item() * x.size(0)
+            correct += (logits.argmax(dim=1) == y).sum().item()
+            total += y.size(0)
+        return running_loss / total, correct / total
+
+    def show_samples(model, loader, device, num_samples=25):
+        model.eval()
+        x, y = next(iter(loader))
+        x, y = x.to(device), y.to(device)
+        preds = model(x).argmax(dim=1)
+
+        # Move to CPU for plotting
+        x, y, preds = x.cpu(), y.cpu(), preds.cpu()
+        x = x[:num_samples]
+        y = y[:num_samples]
+        preds = preds[:num_samples]
+
+        fig, axes = plt.subplots(5, 5, figsize=(8, 8))
+        for i, ax in enumerate(axes.flat):
+            img = x[i].squeeze(0)
+            ax.imshow(img, cmap="gray")
+            color = "green" if preds[i] == y[i] else "red"
+            ax.set_title(f"Pred: {preds[i].item()}\nTrue: {y[i].item()}", color=color)
+            ax.axis("off")
+        plt.tight_layout()
+        plt.show()
+
+    set_seed(42)
+    device = get_device()
+    model.to(device)
+    print(f"Using device: {device}")
+
+    transform = transforms.ToTensor()
+    data_root = Path("./data")
+
+    train_set = datasets.MNIST(root=data_root, train=True, download=True, transform=transform)
+    test_set  = datasets.MNIST(root=data_root,  train=False, download=True, transform=transform)
+    train_loader = DataLoader(train_set, batch_size=128, shuffle=True)
+    test_loader  = DataLoader(test_set,  batch_size=512, shuffle=False)
+
+    loss_fn  = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(model.parameters(), lr=1e-3)
+
+    # --- history containers ---
+    train_losses, train_accs = [], []
+    test_losses,  test_accs  = [], []
+
+    EPOCHS = n_epochs
+    for epoch in range(1, EPOCHS + 1):
+        train_loss, train_acc = train_one_epoch(model, train_loader, loss_fn, optimizer, device)
+        test_loss,  test_acc  = evaluate(model, test_loader, loss_fn, device)
+
+        train_losses.append(train_loss)
+        train_accs.append(train_acc)
+        test_losses.append(test_loss)
+        test_accs.append(test_acc)
+
+        print(f"Epoch {epoch:02d} | "
+              f"Train Loss: {train_loss:.4f} | Train Acc: {train_acc*100:.2f}% | "
+              f"Test Loss: {test_loss:.4f} | Test Acc: {test_acc*100:.2f}%")
+
+    # --- plots ---
+    epochs = range(1, EPOCHS + 1)
+
+    # Loss
+    plt.figure(figsize=(8, 5))
+    plt.plot(epochs, train_losses, marker='o', label='Train Loss')
+    plt.plot(epochs, test_losses,  marker='s', label='Test Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.title('Loss vs. Epochs')
+    plt.grid(True, linestyle='--', alpha=0.4)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+    # Accuracy
+    plt.figure(figsize=(8, 5))
+    plt.plot(epochs, [a * 100 for a in train_accs], marker='o', label='Train Acc (%)')
+    plt.plot(epochs, [a * 100 for a in test_accs],  marker='s', label='Test Acc (%)')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy (%)')
+    plt.title('Accuracy vs. Epochs')
+    plt.grid(True, linestyle='--', alpha=0.4)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+    # Show 25 test images with predictions
+    show_samples(model, test_loader, device, num_samples=25)
+
+    # (Optional) return history if you want to reuse it later
+    return {
+        "train_loss": train_losses,
+        "train_acc": train_accs,
+        "test_loss": test_losses,
+        "test_acc": test_accs,
+    }
+
+
