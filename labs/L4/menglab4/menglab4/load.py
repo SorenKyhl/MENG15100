@@ -1,4 +1,3 @@
-import numpy as np
 
 def generate_circle_data(n_samples=500, noise=0.0, random_state=42):
     """
@@ -20,6 +19,8 @@ def generate_circle_data(n_samples=500, noise=0.0, random_state=42):
     y : np.ndarray, shape (n_samples,)
         Binary labels (0 or 1)
     """
+    import numpy as np
+
     np.random.seed(random_state)
     
     n_per_class = n_samples // 2
@@ -96,7 +97,6 @@ def plot_circle_dataset(X, y, title="Dataset", ax=None):
 
 def generate_circle_train_test_split(dataset_name='circle', n_samples=500, 
                                 noise=0.0, test_split=0.2, random_state=42):
-    from sklearn.model_selection import train_test_split
     """
     Generate and prepare classification data for training.
     
@@ -118,6 +118,9 @@ def generate_circle_train_test_split(dataset_name='circle', n_samples=500,
     X_train, X_test, y_train, y_test : np.ndarray
         Train/test splits
     """
+    import numpy as np
+    from sklearn.model_selection import train_test_split
+
     # Generate data
     generators = {
         'circle': generate_circle_data,
