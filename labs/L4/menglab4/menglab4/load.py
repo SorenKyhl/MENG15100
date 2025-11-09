@@ -1,3 +1,5 @@
+import numpy as np
+
 def generate_circle_data(n_samples=500, noise=0.0, random_state=42):
     """
     Generate circle dataset (inner circle = class 0, outer ring = class 1).
